@@ -55,31 +55,33 @@ public class EncryptionService : IEncryptionService
         // Check arguments.
         if (cipherText == null || cipherText.Length <= 0)
         {
-            throw new ArgumentNullException("cipherText");
+            throw new ArgumentNullException(nameof(cipherText));
         }
         if (key == null || key.Length <= 0)
         {
-            throw new ArgumentNullException("key");
+            throw new ArgumentNullException(nameof(key));
         }
         if (iv == null || iv.Length <= 0)
         {
-            throw new ArgumentNullException("key");
+            throw new ArgumentNullException(nameof(iv));
         }
-        // Declare the string used to hold
-        // the decrypted text.
-        string plaintext = null;
-        // Create an RijndaelManaged object
-        // with the specified key and IV.
-        using (var rijAlg = new RijndaelManaged())
+
+        // Declare the string used to hold the decrypted text.
+        string plaintext = string.Empty;
+
+        // Create an Aes object with the specified key and IV.
+        using (var aesAlg = Aes.Create())
         {
-            //Settings
-            rijAlg.Mode = CipherMode.CBC;
-            rijAlg.Padding = PaddingMode.PKCS7;
-            // rijAlg.FeedbackSize = 128;
-            rijAlg.Key = key;
-            rijAlg.IV = iv;
-            // Create a decrytor to perform the stream transform.
-            var decryptor = rijAlg.CreateDecryptor(rijAlg.Key, rijAlg.IV);
+            // Set the key and IV
+            aesAlg.Key = key;
+            aesAlg.IV = iv;
+
+            // Optional: Set additional settings (Mode, Padding)
+            aesAlg.Mode = CipherMode.CBC;
+            aesAlg.Padding = PaddingMode.PKCS7;
+
+            // Create a decryptor to perform the stream transform.
+            var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
             try
             {
@@ -99,7 +101,7 @@ public class EncryptionService : IEncryptionService
             }
             catch (Exception ex)
             {
-                plaintext = ex.Message;
+                plaintext = ex.Message; // Return the exception message if decryption fails
             }
         }
 
@@ -107,18 +109,35 @@ public class EncryptionService : IEncryptionService
     }
     private static string EncryptStringToBytes(string plainText, byte[] key, byte[] iv)
     {
+        // Check arguments.
+        if (string.IsNullOrEmpty(plainText))
+        {
+            throw new ArgumentNullException(nameof(plainText));
+        }
+        if (key == null || key.Length <= 0)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+        if (iv == null || iv.Length <= 0)
+        {
+            throw new ArgumentNullException(nameof(iv));
+        }
 
         byte[] encrypted;
 
-        using (var rijAlg = new RijndaelManaged())
+        // Create an Aes object with the specified key and IV.
+        using (var aesAlg = Aes.Create())
         {
-            rijAlg.Mode = CipherMode.CBC;
-            rijAlg.Padding = PaddingMode.PKCS7;
-            rijAlg.FeedbackSize = 128;
-            rijAlg.Key = key;
-            rijAlg.IV = iv;
-            // Create a decrytor to perform the stream transform.
-            var encryptor = rijAlg.CreateEncryptor(rijAlg.Key, rijAlg.IV);
+            aesAlg.Key = key;
+            aesAlg.IV = iv;
+
+            // Optional: Set additional settings (Mode, Padding)
+            aesAlg.Mode = CipherMode.CBC;
+            aesAlg.Padding = PaddingMode.PKCS7;
+
+            // Create an encryptor to perform the stream transform.
+            var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
             // Create the streams used for encryption.
             using (var msEncrypt = new MemoryStream())
             {
@@ -126,15 +145,15 @@ public class EncryptionService : IEncryptionService
                 {
                     using (var swEncrypt = new StreamWriter(csEncrypt))
                     {
-                        //Write all data to the stream.
+                        // Write all data to the stream.
                         swEncrypt.Write(plainText);
                     }
                     encrypted = msEncrypt.ToArray();
                 }
             }
         }
-        //Convert.ToBase64String(encrypted);
-        // Return the encrypted bytes from the memory stream.
+
+        // Return the encrypted bytes as a base64 string.
         return Convert.ToBase64String(encrypted);
     }
 }

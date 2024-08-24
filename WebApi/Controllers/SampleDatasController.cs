@@ -6,11 +6,11 @@ namespace WebApi.Controllers
     public class SampleDatasController : ApiControllerBase
     {
         [HttpPost]
-        public IActionResult CreateSample(CreateSampleRequest request)
+        public async Task<IActionResult> CreateSample(CreateSampleRequest request)
         {
             try
             {
-                Mediator.Send(request);
+                await Mediator.Send(request);
               
             }
             catch(Exception ex) 

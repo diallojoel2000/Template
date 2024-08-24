@@ -70,7 +70,7 @@ public static class DependencyInjection
     public static IServiceCollection BindOptions(this IServiceCollection services, IConfiguration configuration)
     {
         //services.Configure<JwtDetails>(configuration.GetSection("Jwt"));
-        services.Configure<EncryptionDetails>(configuration.GetSection("Encryption"));
+        services.Configure<EncryptionDetails>(configuration.GetSection("EncryptionDetails"));
         return services;
     }
     public static IServiceCollection AddBindingValidation(this IServiceCollection services)

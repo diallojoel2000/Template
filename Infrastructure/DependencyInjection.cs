@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +32,7 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IIdentityService, IdentityService>();
+        services.AddTransient<IEncryptionService, EncryptionService>();
         services.AddAuthorization(options =>
              options.AddPolicy("CanPurge", policy => policy.RequireRole("Administrator")));
 
