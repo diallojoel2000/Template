@@ -1,7 +1,9 @@
 ﻿using Application.Common.Interfaces;
+using Application.Common.Models;
 using FluentValidation.AspNetCore;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using WebApi.Filters;
 using WebApi.Services;
 
@@ -62,6 +64,33 @@ public static class DependencyInjection
     public static IServiceCollection AddKeyVaultIfConfigured(this IServiceCollection services, ConfigurationManager configuration)
     {
         //Implementation Here
+        return services;
+    }
+
+    public static IServiceCollection BindOptions(this IServiceCollection services, IConfiguration configuration)
+    {
+        //services.Configure<JwtDetails>(configuration.GetSection("Jwt"));
+        services.Configure<EncryptionDetails>(configuration.GetSection("Encryption"));
+        return services;
+    }
+    public static IServiceCollection AddBindingValidation(this IServiceCollection services)
+    {
+
+        services.PostConfigureAll<EncryptionDetails>(appOptions => {
+            var validator = new EncryptionDetailsValidator();
+            var result = validator.Validate(appOptions);
+            if (!result.IsValid)
+            {
+                throw new Exception(result.Errors.FirstOrDefault()?.ErrorMessage);
+            }
+        });
+        return services;
+    }
+    public static IServiceCollection TriggerBindingValidation(this IServiceCollection services)
+    {
+        var sp = services.BuildServiceProvider();
+        var appOptions = sp.GetRequiredService<IOptions<EncryptionDetails>>();
+        var _ = appOptions.Value;
         return services;
     }
 }

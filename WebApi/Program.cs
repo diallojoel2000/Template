@@ -1,40 +1,80 @@
 using Infrastructure.Persistence;
+using Serilog;
+using Serilog.Enrichers.Sensitive;
 
-var builder = WebApplication.CreateBuilder(args);
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false)
+    .Build();
 
-// Add services to the container.
-builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext().Enrich.WithSensitiveDataMasking(options =>
+    {
+        //Add other secrets here
+        options.MaskProperties.Add("X-CallerPassword");
+        options.MaskProperties.Add("password");
+        options.MaskProperties.Add("token");
+        options.MaskProperties.Add("refreshToken");
+        options.MaskProperties.Add("answer");
+        options.MaskingOperators = new List<IMaskingOperator>
+        {
+            new IbanMaskingOperator(),
+            new CreditCardMaskingOperator(),
+            // etc etc
+        };
+    })
+    .ReadFrom.Configuration(config)
+        .CreateLogger();
 
-builder.Services.AddApplicationServices();
-builder.Services.AddInfrastructureServices(builder.Configuration);
-builder.Services.AddWebServices();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    await app.InitialiseDatabaseAsync();
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
+
+    // Add services to the container.
+    builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
+
+    builder.Services.AddApplicationServices();
+    builder.Services.AddInfrastructureServices(builder.Configuration);
+    builder.Services.AddWebServices();
+    builder.Services.BindOptions(builder.Configuration);
+    builder.Services.AddBindingValidation();
+    builder.Services.TriggerBindingValidation();
+
+    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+        await app.InitialiseDatabaseAsync();
+    }
+    else
+    {
+        app.UseHsts();
+    }
+
+    app.UseHealthChecks("/health");
+    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+
+    //app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.Run();
 }
-else
+catch(Exception ex)
 {
-    app.UseHsts();
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
-
-app.UseHealthChecks("/health");
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-//app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}
 
 public partial class Program { }
