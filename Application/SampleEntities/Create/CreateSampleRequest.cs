@@ -7,7 +7,7 @@ namespace Application.SampleEntities.Create
     public record CreateSampleRequest : IRequest<long>
     {
         public string Name { get; init; } = null!;
-        public string Description;
+        public string Description { get; init; } = null!;
     }
     internal class CreateSampleRequestHandler : IRequestHandler<CreateSampleRequest,long>
     {

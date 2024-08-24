@@ -24,10 +24,16 @@ public static class DependencyInjection
         services.AddControllers(options =>
         {
             options.Filters.Add<ApiExceptionFilterAttribute>();
-        })
-        .AddFluentValidation(x => x.AutomaticValidationEnabled = false);
+        });
 
-                services.AddRazorPages();
+        services.AddFluentValidationAutoValidation(options =>
+         {
+             options.DisableDataAnnotationsValidation = true; 
+         })
+        .AddFluentValidationClientsideAdapters();
+
+
+        services.AddRazorPages();
 
         // Customise default API behaviour
         services.Configure<ApiBehaviorOptions>(options =>
