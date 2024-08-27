@@ -7,7 +7,7 @@ namespace Application.FunctionalTests
     public class UnitTest1:Testing
     {
         [Fact]
-        public async void ShouldReturnValidationException()
+        public async Task ShouldReturnValidationException()
         {
             var command = new CreateSampleRequest
             {
@@ -19,7 +19,7 @@ namespace Application.FunctionalTests
         }
 
         [Fact]
-        public async void ShouldReturnValidId()
+        public async Task ShouldReturnValidId()
         {
             var command = new CreateSampleRequest
             {
