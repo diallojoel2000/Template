@@ -17,10 +17,12 @@ using static Testing;
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly DbConnection _connection;
+    private readonly IUser _user;
 
-    public CustomWebApplicationFactory(DbConnection connection)
+    public CustomWebApplicationFactory(DbConnection connection, IUser user)
     {
         _connection = connection;
+        _user = user;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -29,7 +31,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         {
             services
                 .RemoveAll<IUser>()
-                .AddTransient(provider => Mock.Of<IUser>(s => s.Id == GetUserId()));
+                .AddTransient(provider => _user);
 
             services
                 .RemoveAll<DbContextOptions<ApplicationDbContext>>()
