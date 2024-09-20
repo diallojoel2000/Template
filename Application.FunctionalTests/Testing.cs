@@ -12,16 +12,6 @@ namespace Application.FunctionalTests
         private static CustomWebApplicationFactory _factory = null!;
         private static IServiceScopeFactory _scopeFactory = null!;
         
-
-        public Testing()
-        {
-            _database = TestDatabaseFactory.CreateAsync().Result;
-
-            _factory = new CustomWebApplicationFactory(_database.GetConnection(), ClearUser());
-
-            _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
-
-        }
         protected static void SetCurrentUser(IUser user)
         {
             _factory = new CustomWebApplicationFactory(_database.GetConnection(), user);
@@ -75,6 +65,12 @@ namespace Application.FunctionalTests
 
         public async Task InitializeAsync()
         {
+            _database = await TestDatabaseFactory.CreateAsync();
+
+            _factory = new CustomWebApplicationFactory(_database.GetConnection(), ClearUser());
+            
+            _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
+            //await _factory.Services.InitialiseDatabaseAsync();
             await ResetState();
         }
 
