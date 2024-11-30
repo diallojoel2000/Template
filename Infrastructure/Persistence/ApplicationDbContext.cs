@@ -12,6 +12,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>,  IApplic
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
     public DbSet<SampleEntity> SampleEntities => Set<SampleEntity>();
+    public DbSet<LoginLog> LoginLogs => Set<LoginLog>();
 
     //public DbSet<TodoItem> TodoItems => Set<TodoItem>();
 

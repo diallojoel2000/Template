@@ -2,6 +2,11 @@
 using Application.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace Infrastructure.Identity;
 
@@ -10,15 +15,17 @@ public class IdentityService : IIdentityService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IDateTime _dateTime;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
-        IAuthorizationService authorizationService)
+        IAuthorizationService authorizationService, IDateTime dateTime)
     {
         _userManager = userManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
+        _dateTime = dateTime;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -27,7 +34,111 @@ public class IdentityService : IIdentityService
 
         return user?.UserName;
     }
+    public async Task<ResponseDto> LoginAsync(string username, string password, JwtDetail jwt)
+    {
+        try
+        {
+            var response = new ResponseDto();
 
+            var user = await _userManager.Users.FirstOrDefaultAsync(m => m.UserName.ToLower() == username.ToLower());
+            
+            if (await _userManager.CheckPasswordAsync(user, password))
+            {
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    response.IsSuccess = false;
+                    response.DisplayMessage = "User is locked out";
+                    response.ErrorMessage = new List<string> { response.DisplayMessage };
+                    return response;
+                }
+                
+                await _userManager.ResetAccessFailedCountAsync(user);
+                var roles = await _userManager.GetRolesAsync(user);
+                var claims = new List<Claim>();
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+                
+                claims.Add(new Claim("Username", user.UserName));
+                claims.Add(new Claim(JwtRegisteredClaimNames.Sub, user.Id));
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""));
+                claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = _dateTime.Now.AddMinutes(jwt.TokenValidityInMinutes),
+                    Issuer = jwt.Issuer,
+                    Audience = jwt.Audience,
+                    SigningCredentials = new SigningCredentials
+                    (new SymmetricSecurityKey(jwt.KeyHash),
+                    SecurityAlgorithms.HmacSha512Signature)
+                };
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                //var jwtToken = tokenHandler.WriteToken(token);
+                var stringToken = tokenHandler.WriteToken(token);
+                user.RefreshToken = GenerateRefreshToken();
+                user.RefreshTokenExpiryTime = _dateTime.Now.AddDays(jwt.RefreshTokenValidityInDays);
+                user.LastLogin = _dateTime.Now;
+
+                await _userManager.UpdateAsync(user);
+                
+                response.Result = new
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    RefreshToken = user.RefreshToken,
+                    //Expiration = token.ValidTo,
+                    //TokenValidityTime= tokenValidityTime,
+                };
+                return response;
+            }
+            if (user.LockoutEnabled)
+            {
+                user.AccessFailedCount = user.AccessFailedCount + 1;
+                if (user.AccessFailedCount == 5)
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, _dateTime.Now.AddMinutes(5));
+                    response.IsSuccess = false;
+                    response.DisplayMessage = "You account has been locked";
+                    response.ErrorMessage = new List<string> { response.DisplayMessage };
+                    return response;
+                }
+                else
+                {
+                    await _userManager.UpdateAsync(user);
+                    response.IsSuccess = false;
+                    response.DisplayMessage = "Invalid username or password";//$"Your account will be locked after {5- user.AccessFailedCount} try(s)";
+                    response.ErrorMessage = new List<string> { response.DisplayMessage };
+                    return response;
+                }
+            }
+
+            response.IsSuccess = false;
+            response.DisplayMessage = "Invalid username or password";
+            response.ErrorMessage = new List<string> { response.DisplayMessage };
+            return response;
+        }
+        catch (Exception ex)
+        {
+            return new ResponseDto
+            {
+                IsSuccess = false,
+                DisplayMessage = ex.Message,
+                ErrorMessage = new List<string> { Convert.ToString(ex) }
+            };
+        }
+
+    }
+    private static string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+    
     public async Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
     {
         var user = new ApplicationUser
