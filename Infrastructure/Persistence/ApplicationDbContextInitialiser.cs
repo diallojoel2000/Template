@@ -62,6 +62,7 @@ public static class InitialiserExtensions
 
         public async Task TrySeedAsync()
         {
+            //await CreateApplicationClasses();
             // Default roles
             var administratorRole = new IdentityRole("Administrator");
 
@@ -85,6 +86,22 @@ public static class InitialiserExtensions
             // Default data
             // Seed, if necessary
             
+        }
+
+        public async Task CreateApplicationClasses()
+        {
+            var entityTypes = _context.Model.GetEntityTypes();
+            foreach (var entityType in entityTypes)
+            {
+                var entity = entityType.ClrType;
+                var properties = entityType.GetProperties();
+                CreateCRUD.CommandCreate(entity, properties);
+                foreach (var item in entity.GetProperties())
+                {
+                    
+                    var prop = item.Name;
+                }
+            }
         }
     }
 }

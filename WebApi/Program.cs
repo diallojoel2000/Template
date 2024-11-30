@@ -37,12 +37,25 @@ try
     builder.Services.AddInfrastructureServices(builder.Configuration);
     builder.Services.AddWebServices();
     builder.Services.BindOptions(builder.Configuration);
-    builder.Services.AddBindingValidation();
-    builder.Services.TriggerBindingValidation();
+    builder.Services.OptionsPostConfiguration();
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+        
+    builder.Services.AddCors(option => 
+    {
+        var origins = builder.Configuration.GetSection("AllowedCorsOrigin").Get<string[]>();
+        option.AddPolicy("AllowAll", builder =>
+        {
+            builder
+            .WithOrigins(origins?? [""])
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            ;
+        });
+    });
 
     var app = builder.Build();
 
@@ -58,6 +71,7 @@ try
         app.UseHsts();
     }
 
+    app.UseCors("AllowAll");
     app.UseHealthChecks("/health");
     app.UseHttpsRedirection();
     app.UseStaticFiles();

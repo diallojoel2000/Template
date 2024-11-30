@@ -73,10 +73,9 @@ public static class DependencyInjection
         services.Configure<EncryptionDetails>(configuration.GetSection("EncryptionDetails"));
         return services;
     }
-    public static IServiceCollection AddBindingValidation(this IServiceCollection services)
+    public static IServiceCollection OptionsPostConfiguration(this IServiceCollection services)
     {
-
-        services.PostConfigureAll<EncryptionDetails>(appOptions => {
+        services.PostConfigure<EncryptionDetails>(appOptions => {
             var validator = new EncryptionDetailsValidator();
             var result = validator.Validate(appOptions);
             if (!result.IsValid)
@@ -86,11 +85,5 @@ public static class DependencyInjection
         });
         return services;
     }
-    public static IServiceCollection TriggerBindingValidation(this IServiceCollection services)
-    {
-        var sp = services.BuildServiceProvider();
-        var appOptions = sp.GetRequiredService<IOptions<EncryptionDetails>>();
-        var _ = appOptions.Value;
-        return services;
-    }
+    
 }

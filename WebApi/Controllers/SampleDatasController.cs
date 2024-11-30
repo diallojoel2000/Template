@@ -8,16 +8,8 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSample(CreateSampleRequest request)
         {
-            try
-            {
-                await Mediator.Send(request);
-              
-            }
-            catch(Exception ex) 
-            { 
-                var message = ex.Message;
-            }
-            return Ok();
+            var response = await Mediator.Send(request);
+            return Ok(response);
         }
     }
 }
