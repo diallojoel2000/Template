@@ -9,9 +9,9 @@ namespace WebApi.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Login")]
-        public IActionResult Login(LoginCommand command)
+        public async Task<IActionResult> Login(LoginCommand command)
         {
-            return Ok(command);
+            return Ok(await Mediator.Send(command));
         }
     }
 }

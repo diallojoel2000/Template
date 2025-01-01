@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IIdentityService, IdentityService>();
         services.AddTransient<IEncryptionService, EncryptionService>();
+        services.AddTransient<IDateTime, DateTimeService>();
         services.AddAuthorization(options =>
              options.AddPolicy("CanPurge", policy => policy.RequireRole("Administrator")));
 

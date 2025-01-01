@@ -41,7 +41,13 @@ public class IdentityService : IIdentityService
             var response = new ResponseDto();
 
             var user = await _userManager.Users.FirstOrDefaultAsync(m => m.UserName.ToLower() == username.ToLower());
-            
+            if (user == null)
+            {
+                response.IsSuccess = false;
+                response.DisplayMessage = "Invalid username or password";
+                response.ErrorMessage = new List<string> { response.DisplayMessage };
+                return response;
+            }
             if (await _userManager.CheckPasswordAsync(user, password))
             {
                 if (await _userManager.IsLockedOutAsync(user))

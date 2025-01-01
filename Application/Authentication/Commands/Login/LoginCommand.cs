@@ -31,8 +31,8 @@ namespace Application.Authentication.Commands
 
         public async Task<ResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            //var response = await _identityService.LoginAsync(request.Username, request.Password, _jwtDetail);
-            var response = await _identityService.LoginAsync(_encryptionService.DecryptAes(request.Username), _encryptionService.DecryptAes(request.Password), _jwtDetail);
+            var response = await _identityService.LoginAsync(request.Username, request.Password, _jwtDetail);
+            //var response = await _identityService.LoginAsync(_encryptionService.DecryptAes(request.Username), _encryptionService.DecryptAes(request.Password), _jwtDetail);
             if(response.IsSuccess)
             {
                 await LogAuthentication(request.Username, "Login", cancellationToken);
