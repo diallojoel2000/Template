@@ -8,11 +8,12 @@ namespace Infrastructure.Services;
 
 public class EncryptionService : IEncryptionService
 {
-    private readonly EncryptionDetails _encryptionDetials;
-    public EncryptionService(IOptions<EncryptionDetails> encryptionDetails)
-    {
-        _encryptionDetials =encryptionDetails.Value;
-    }
+    //Remove and know peace
+    //private readonly EncryptionDetails _encryptionDetials;
+    //public EncryptionService(IOptions<EncryptionDetails> encryptionDetails)
+    //{
+    //    _encryptionDetials =encryptionDetails.Value;
+    //}
     public string DecryptAes(string cipherText)
     {
         var secretkey = Encoding.UTF8.GetBytes(_encryptionDetials.ClientKey);

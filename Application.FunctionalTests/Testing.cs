@@ -6,17 +6,20 @@ using WebApi.Services;
 
 namespace Application.FunctionalTests
 {
+    [CollectionDefinition("Sequential Tests", DisableParallelization = true)]
+    [Collection("Sequential Tests")]
     public partial class Testing : IAsyncLifetime
     {
         private static ITestDatabase _database = null!;
         private static CustomWebApplicationFactory _factory = null!;
         private static IServiceScopeFactory _scopeFactory = null!;
+        public static HttpClient _client = null!;
         
         protected static void SetCurrentUser(IUser user)
         {
             _factory = new CustomWebApplicationFactory(_database.GetConnection(), user);
             _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
-
+            _client = _factory.CreateClient();
         }
         public static async Task ResetState()
         {
@@ -70,6 +73,7 @@ namespace Application.FunctionalTests
             _factory = new CustomWebApplicationFactory(_database.GetConnection(), ClearUser());
             
             _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
+            _client = _factory.CreateClient();
             //await _factory.Services.InitialiseDatabaseAsync();
             await ResetState();
         }
