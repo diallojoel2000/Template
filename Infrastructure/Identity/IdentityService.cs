@@ -1,6 +1,7 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,16 +17,17 @@ public class IdentityService : IIdentityService
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly IAuthorizationService _authorizationService;
     private readonly IDateTime _dateTime;
-
+    private readonly IHttpContextAccessor _httpContextAccessor;
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
-        IAuthorizationService authorizationService, IDateTime dateTime)
+        IAuthorizationService authorizationService, IDateTime dateTime, IHttpContextAccessor httpContextAccessor)
     {
         _userManager = userManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
         _dateTime = dateTime;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -94,10 +96,11 @@ public class IdentityService : IIdentityService
                 response.Result = new
                 {
                     Token = new JwtSecurityTokenHandler().WriteToken(token),
-                    RefreshToken = user.RefreshToken,
+                    //RefreshToken = user.RefreshToken,
                     //Expiration = token.ValidTo,
                     //TokenValidityTime= tokenValidityTime,
                 };
+                _httpContextAccessor?.HttpContext?.Response.Cookies.Append("refreshToken", user.RefreshToken);
                 return response;
             }
             if (user.LockoutEnabled)

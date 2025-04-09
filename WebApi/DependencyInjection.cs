@@ -3,7 +3,6 @@ using Application.Common.Models;
 using FluentValidation.AspNetCore;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using WebApi.Filters;
 using WebApi.Services;
 
@@ -36,6 +35,12 @@ public static class DependencyInjection
 
 
         services.AddRazorPages();
+        services.Configure<CookiePolicyOptions>(options =>
+        {
+            options.MinimumSameSitePolicy = SameSiteMode.None;
+            options.Secure = CookieSecurePolicy.Always;
+            options.HttpOnly = AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
+        });
 
         // Customise default API behaviour
         services.Configure<ApiBehaviorOptions>(options =>
@@ -70,19 +75,21 @@ public static class DependencyInjection
     public static IServiceCollection BindOptions(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtDetail>(configuration.GetSection("Jwt"));
-        services.Configure<EncryptionDetails>(configuration.GetSection("EncryptionDetails"));
+        //services.Configure<EncryptionDetails>(configuration.GetSection("EncryptionDetails"));
+        EncryptionDetails.ClientKey = configuration["EncryptionDetails:ClientKey"]??"";
+        EncryptionDetails.ClientSalt = configuration["EncryptionDetails:ClientSalt"] ?? "";
         return services;
     }
     public static IServiceCollection OptionsPostConfiguration(this IServiceCollection services)
     {
-        services.PostConfigure<EncryptionDetails>(appOptions => {
-            var validator = new EncryptionDetailsValidator();
-            var result = validator.Validate(appOptions);
-            if (!result.IsValid)
-            {
-                throw new Exception(result.Errors.FirstOrDefault()?.ErrorMessage);
-            }
-        });
+        //services.PostConfigure<EncryptionDetails>(appOptions => {
+        //    var validator = new EncryptionDetailsValidator();
+        //    var result = validator.Validate(appOptions);
+        //    if (!result.IsValid)
+        //    {
+        //        throw new Exception(result.Errors.FirstOrDefault()?.ErrorMessage);
+        //    }
+        //});
         return services;
     }
     

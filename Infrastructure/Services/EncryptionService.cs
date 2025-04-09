@@ -1,6 +1,5 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Models;
-using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,16 +7,11 @@ namespace Infrastructure.Services;
 
 public class EncryptionService : IEncryptionService
 {
-    //Remove and know peace
-    //private readonly EncryptionDetails _encryptionDetials;
-    //public EncryptionService(IOptions<EncryptionDetails> encryptionDetails)
-    //{
-    //    _encryptionDetials =encryptionDetails.Value;
-    //}
+    //No Constructor please
     public string DecryptAes(string cipherText)
     {
-        var secretkey = Encoding.UTF8.GetBytes(_encryptionDetials.ClientKey);
-        var ivKey = Encoding.UTF8.GetBytes(_encryptionDetials.ClientSalt);
+        var secretkey = Encoding.UTF8.GetBytes(EncryptionDetails.ClientKey);
+        var ivKey = Encoding.UTF8.GetBytes(EncryptionDetails.ClientSalt);
 
         var encrypted = Convert.FromBase64String(cipherText);
         var decriptedFromJavascript = DecryptStringFromBytes(encrypted, secretkey, ivKey);
@@ -25,8 +19,8 @@ public class EncryptionService : IEncryptionService
     }
     public string EncryptAes(string plainText)
     {
-        var secretkey = Encoding.UTF8.GetBytes(_encryptionDetials.ClientKey);
-        var ivKey = Encoding.UTF8.GetBytes(_encryptionDetials.ClientSalt);
+        var secretkey = Encoding.UTF8.GetBytes(EncryptionDetails.ClientKey);
+        var ivKey = Encoding.UTF8.GetBytes(EncryptionDetails.ClientSalt);
 
         var plainBytes = Encoding.UTF8.GetBytes(plainText);
         var encryptedFromJavascript = EncryptStringToBytes(plainText, secretkey, ivKey);

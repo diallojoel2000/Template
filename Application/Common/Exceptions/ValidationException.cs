@@ -9,6 +9,13 @@ public class ValidationException : Exception
     {
         Errors = new Dictionary<string, string[]>();
     }
+    public ValidationException(string message)
+    {
+        var ds= new Dictionary<string, string>();
+        
+        Errors = new Dictionary<string, string[]>();
+        Errors.Add("Error", new[] { message });
+    }
 
     public ValidationException(IEnumerable<ValidationFailure> failures)
         : this()

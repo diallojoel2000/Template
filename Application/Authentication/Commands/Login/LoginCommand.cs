@@ -3,6 +3,7 @@ using Application.Common.Models;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Application.Common.Exceptions;
 
 namespace Application.Authentication.Commands
 {
@@ -33,10 +34,11 @@ namespace Application.Authentication.Commands
         {
             var response = await _identityService.LoginAsync(request.Username, request.Password, _jwtDetail);
             //var response = await _identityService.LoginAsync(_encryptionService.DecryptAes(request.Username), _encryptionService.DecryptAes(request.Password), _jwtDetail);
-            if(response.IsSuccess)
+            if(!response.IsSuccess)
             {
-                await LogAuthentication(request.Username, "Login", cancellationToken);
+                throw new Common.Exceptions.ValidationException(response.DisplayMessage);
             }
+            await LogAuthentication(request.Username, "Login", cancellationToken);
             return response;
         }
         private async Task LogAuthentication(string username, string action, CancellationToken cancellationToken)

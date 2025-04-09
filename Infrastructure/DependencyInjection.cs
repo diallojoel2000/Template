@@ -5,7 +5,10 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using static Infrastructure.Persistence.InitialiserExtensions;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class DependencyInjection
@@ -19,8 +22,23 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ApplicationDbContextInitialiser>();
-        services.AddAuthentication()
-            .AddBearerToken(IdentityConstants.BearerScheme);
+        services.AddAuthentication(option => {
+            option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(o =>
+        {
+            o.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidAudience = configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]??"")),
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime =true,
+                ValidateIssuerSigningKey =true,
+            };
+        });
 
         services.AddAuthorizationBuilder();
 

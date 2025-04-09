@@ -1,16 +1,8 @@
 ﻿namespace Application.Common.Models;
 
-public record EncryptionDetails
+public static class EncryptionDetails
 {
-    public string ClientKey { get; init; } = null!;
-    public string ClientSalt { get; init; } = null!;
+    public static string ClientKey { get; set; } = null!;
+    public static string ClientSalt { get; set; } = null!;
 }
 
-public class EncryptionDetailsValidator:AbstractValidator<EncryptionDetails>
-{
-    public EncryptionDetailsValidator()
-    {
-        RuleFor(m => m.ClientKey).NotEmpty();
-        RuleFor(m => m.ClientSalt).NotEmpty();
-    }
-}
