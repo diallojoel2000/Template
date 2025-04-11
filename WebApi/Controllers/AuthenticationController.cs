@@ -1,4 +1,5 @@
 ﻿using Application.Authentication.Commands;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,7 @@ public class AuthenticationController : ApiControllerBase
 
     [HttpPost]
     [Route("Logout")]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
         Response.Cookies.Delete("refreshToken");
         return Ok();
@@ -27,9 +28,9 @@ public class AuthenticationController : ApiControllerBase
     [Route("RefreshToken")]
     public async Task<IActionResult> RefreshToken()
     {
-        string refreshToken=string.Empty;
-        Request.Cookies.TryGetValue("refreshToken", out refreshToken);
-        return Ok();
+        var token = await HttpContext.GetTokenAsync("access_token");
+        var response = await Mediator.Send(new RefreshTokenCommand { Token= token });
+        return Ok(response);
     }
    
 }

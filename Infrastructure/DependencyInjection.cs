@@ -9,15 +9,23 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using static Infrastructure.Persistence.InitialiserExtensions;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Infrastructure.Interceptors;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
-                   builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
+
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                   builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+        });
+
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 

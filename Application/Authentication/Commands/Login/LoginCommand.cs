@@ -43,22 +43,15 @@ namespace Application.Authentication.Commands
         }
         private async Task LogAuthentication(string username, string action, CancellationToken cancellationToken)
         {
-            try
+            var log = new LoginLog
             {
-                var log = new LoginLog
-                {
-                    Username = username,
-                    IpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString(),
-                    DateAdded = _dateTime.Now,
-                    Action = action,
-                };
-                _context.LoginLogs.Add(log);
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-
-            }
+                Username = username,
+                IpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString(),
+                DateAdded = _dateTime.Now,
+                Action = action,
+            };
+            _context.LoginLogs.Add(log);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

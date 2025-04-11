@@ -14,6 +14,7 @@ public class CurrentUser : IUser
     }
     
     public string? Id => _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-    public string? Username => _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+    public string? Username => _httpContextAccessor.HttpContext?.User?.FindFirstValue("Username");
     public string? RefreshToken => _httpContextAccessor.HttpContext?.Request?.Cookies["refreshToken"];
+    public string? IpAddress => _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
 }
