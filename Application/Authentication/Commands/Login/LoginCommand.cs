@@ -20,7 +20,8 @@ namespace Application.Authentication.Commands
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IDateTime _dateTime;
         private readonly IApplicationDbContext _context;
-        public LoginCommandHandler(IApplicationDbContext context, IDateTime dateTime,IHttpContextAccessor httpContextAccessor,IIdentityService identityService,IOptions<JwtDetail> jwt, IEncryptionService encryptionService)
+        private readonly IUser _currentUser;
+        public LoginCommandHandler(IApplicationDbContext context, IDateTime dateTime,IHttpContextAccessor httpContextAccessor,IIdentityService identityService,IOptions<JwtDetail> jwt, IEncryptionService encryptionService,IUser currentUser)
         {
             _identityService = identityService;
             _encryptionService = encryptionService;
@@ -28,6 +29,7 @@ namespace Application.Authentication.Commands
             _httpContextAccessor = httpContextAccessor;
             _dateTime = dateTime;
             _context = context;
+            _currentUser = currentUser;
         }
 
         public async Task<ResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -46,7 +48,7 @@ namespace Application.Authentication.Commands
             var log = new LoginLog
             {
                 Username = username,
-                IpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString(),
+                IpAddress = _currentUser.IpAddress??"NA",
                 DateAdded = _dateTime.Now,
                 Action = action,
             };

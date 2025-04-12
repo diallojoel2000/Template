@@ -64,12 +64,12 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
-        await app.InitialiseDatabaseAsync();
     }
     else
     {
         app.UseHsts();
     }
+    await app.InitialiseDatabaseAsync();
 
     app.UseCors("AllowAll");
     app.UseHealthChecks("/health");

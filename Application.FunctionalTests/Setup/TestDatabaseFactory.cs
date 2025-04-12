@@ -1,4 +1,4 @@
-﻿namespace Application.FunctionalTests;
+﻿namespace Application.FunctionalTests.Setup;
 
 public static class TestDatabaseFactory
 {

@@ -85,7 +85,7 @@ public static class InitialiserExtensions
 
             // Default data
             // Seed, if necessary
-            
+
         }
 
         public async Task CreateApplicationClasses()

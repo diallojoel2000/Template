@@ -44,7 +44,7 @@ public class IdentityService : IIdentityService
         {
             var response = new ResponseDto();
 
-            var user = await _userManager.Users.FirstOrDefaultAsync(m => m.UserName.ToLower() == username.ToLower());
+            var user = await _userManager.Users.FirstOrDefaultAsync(m => m.UserName!.ToLower() == username.ToLower());
             if (user == null)
             {
                 response.IsSuccess = false;
@@ -84,7 +84,7 @@ public class IdentityService : IIdentityService
 
                 await _userManager.UpdateAsync(user);
                 
-                response.Result = new
+                response.Result = new TokenVm
                 {
                     Token = token
                 };
@@ -157,7 +157,7 @@ public class IdentityService : IIdentityService
         user.LastLogin = _dateTime.Now;
         await _userManager.UpdateAsync(user);
         
-        response.Result = new
+        response.Result = new TokenVm
         {
             Token = token
         };

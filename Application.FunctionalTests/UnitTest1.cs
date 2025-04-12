@@ -1,8 +1,13 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
+using Application.FunctionalTests.Setup;
 using Application.SampleEntities.Create;
 using FluentAssertions;
 using Moq;
+using Newtonsoft.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net;
+using System.Text;
 
 namespace Application.FunctionalTests
 {
@@ -21,36 +26,27 @@ namespace Application.FunctionalTests
         }
 
         [Fact]
-        public async Task ShouldReturnValidId()
+        public async Task ShouldReturnOkWhileAuthenticated()
         {
+            await SeedDatabase();
             var command = new CreateSampleRequest
             {
                 Name = "Sample Name",
                 Description = "Test Description"
             };
-            
-            var response = await SendAsync(command);
+            var token = await GetToken();
+            var message = new HttpRequestMessage();
+            message.Headers.Add("Accept", "application/json");
+            message.RequestUri = new Uri($"{_client.BaseAddress}SampleDatas");
+            message.Content = new StringContent(JsonConvert.SerializeObject(command), Encoding.UTF8, "application/json");
+            message.Method = HttpMethod.Post;
 
-            response.Should().BeGreaterThan(0);
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.SendAsync(message);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
         }
 
-        [Fact]
-        public async Task ShouldNotReturnValidationException()
-        {
-            //var mockUser = Mock.Of<IUser>(u => u.Id == "XXXXXX" && u.Username == "TestUser");
-            //SetCurrentUser(mockUser);
-
-            var mockUser = new Mock<IUser>();
-            mockUser.Setup(m => m.Id).Returns("AnotherId");
-            mockUser.Setup(m => m.Username).Returns("TestUser");
-
-            var command = new CreateSampleRequest
-            {
-                Name = "Sample Name",
-                Description = "Test Description"
-            };
-            await FluentActions.Invoking(() =>
-           SendAsync(command)).Should().NotThrowAsync<ValidationException>();
-        }
     }
 }

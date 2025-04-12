@@ -6,7 +6,7 @@ using Respawn;
 using Testcontainers.MsSql;
 
 
-namespace Application.FunctionalTests;
+namespace Application.FunctionalTests.Setup;
 
 public class TestcontainersTestDatabase : ITestDatabase
 {
@@ -24,32 +24,25 @@ public class TestcontainersTestDatabase : ITestDatabase
 
     public async Task InitialiseAsync()
     {
-        try
+        await _container.StartAsync();
+
+        _connectionString = _container.GetConnectionString();
+
+        _connection = new SqlConnection(_connectionString);
+
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(_connectionString)
+            .Options;
+
+        var context = new ApplicationDbContext(options);
+
+        context.Database.Migrate();
+
+        _respawner = await Respawner.CreateAsync(_connectionString, new RespawnerOptions
         {
-            await _container.StartAsync();
+            TablesToIgnore = new Respawn.Graph.Table[] { "__EFMigrationsHistory" }
+        });
 
-            _connectionString = _container.GetConnectionString();
-
-            _connection = new SqlConnection(_connectionString);
-
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseSqlServer(_connectionString)
-                .Options;
-
-            var context = new ApplicationDbContext(options);
-
-            context.Database.Migrate();
-
-            _respawner = await Respawner.CreateAsync(_connectionString, new RespawnerOptions
-            {
-                TablesToIgnore = new Respawn.Graph.Table[] { "__EFMigrationsHistory" }
-            });
-        }
-        catch(Exception ex) 
-        {
-            var msg = ex.Message;
-        }
-        
     }
 
     public DbConnection GetConnection()
