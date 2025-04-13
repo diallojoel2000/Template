@@ -63,7 +63,7 @@ public static class InitialiserExtensions
 
         public async Task TrySeedAsync()
         {
-            await CreateApplicationClasses();
+            //await CreateApplicationClasses();
             // Default roles
             var administratorRole = new IdentityRole("Administrator");
 

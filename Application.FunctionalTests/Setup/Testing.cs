@@ -1,4 +1,5 @@
 ﻿using Application.Authentication.Commands;
+using Application.Common.Interfaces;
 using Application.Common.Models;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace Application.FunctionalTests.Setup
         private static CustomWebApplicationFactory _factory = null!;
         private static IServiceScopeFactory _scopeFactory = null!;
         public static HttpClient _client = null!;
+        public static IEncryptionService _encryptionService = null!;
 
         public async Task InitializeAsync()
         {
@@ -25,6 +27,7 @@ namespace Application.FunctionalTests.Setup
 
             _scopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
             _client = _factory.CreateClient();
+            _encryptionService = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IEncryptionService>();
 
             await ResetState();
         }
@@ -58,13 +61,13 @@ namespace Application.FunctionalTests.Setup
 
             await mediator.Send(request);
         }
-
+        
         public static async Task<string> GetToken()
         {
             var data = new LoginCommand
             {
-                Username = "administrator@localhost",
-                Password = "Administrator1!"
+                Username = _encryptionService.EncryptAes("administrator@localhost"),
+                Password = _encryptionService.EncryptAes("Administrator1!")
             };
 
             var message = new HttpRequestMessage();

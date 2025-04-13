@@ -16,8 +16,8 @@ public class AuthenticationTest:Testing
         await SeedDatabase();
         var data = new LoginCommand
         {
-            Username = "administrator@localhost",
-            Password = "Administrator1!"
+            Username = _encryptionService.EncryptAes("administrator@localhost"),
+            Password = _encryptionService.EncryptAes("Administrator1!")
         };
 
         var message = new HttpRequestMessage();
