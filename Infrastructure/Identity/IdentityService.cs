@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,17 +20,18 @@ public class IdentityService : IIdentityService
     private readonly IAuthorizationService _authorizationService;
     private readonly IDateTime _dateTime;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly JwtDetail _jwt;
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
-        IAuthorizationService authorizationService, IDateTime dateTime, IHttpContextAccessor httpContextAccessor)
+        IAuthorizationService authorizationService, IDateTime dateTime, IHttpContextAccessor httpContextAccessor, IOptions<JwtDetail> jwt)
     {
         _userManager = userManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
         _dateTime = dateTime;
         _httpContextAccessor = httpContextAccessor;
-
+        _jwt = jwt.Value;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -38,7 +40,7 @@ public class IdentityService : IIdentityService
 
         return user?.UserName;
     }
-    public async Task<ResponseDto> LoginAsync(string username, string password, JwtDetail jwt)
+    public async Task<ResponseDto> LoginAsync(string username, string password)
     {
         try
         {
@@ -76,10 +78,10 @@ public class IdentityService : IIdentityService
                 claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
                 
 
-                var token = CreateToken(jwt, new ClaimsIdentity(claims));
+                var token = CreateToken(new ClaimsIdentity(claims));
                 
                 user.RefreshToken = GenerateRefreshToken();
-                user.RefreshTokenExpiryTime = _dateTime.Now.AddDays(jwt.RefreshTokenValidityInDays);
+                user.RefreshTokenExpiryTime = _dateTime.Now.AddDays(_jwt.RefreshTokenValidityInDays);
                 user.LastLogin = _dateTime.Now;
 
                 await _userManager.UpdateAsync(user);
@@ -128,11 +130,11 @@ public class IdentityService : IIdentityService
         }
 
     }
-    public async Task<ResponseDto> RefreshToken(string username, string accessToken, JwtDetail jwt, CancellationToken cancellationToken)
+    public async Task<ResponseDto> RefreshToken(string username, string accessToken, CancellationToken cancellationToken)
     {
         var refreshToken = _httpContextAccessor.HttpContext?.Request?.Cookies["refreshToken"];
         var response = new ResponseDto();
-        var principal = GetPrincipalFromExpiredToken(accessToken, jwt);
+        var principal = GetPrincipalFromExpiredToken(accessToken);
         if (principal == null)
         {
             response.IsSuccess = false;
@@ -150,7 +152,7 @@ public class IdentityService : IIdentityService
             return response;
         }
 
-        var token = CreateToken(jwt, new ClaimsIdentity(principal.Claims.ToList()));
+        var token = CreateToken(new ClaimsIdentity(principal.Claims.ToList()));
         var newRefreshToken = GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
@@ -171,13 +173,13 @@ public class IdentityService : IIdentityService
         rng.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
     }
-    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token, JwtDetail jwt)
+    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
     {
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidIssuer = jwt.Issuer,
-            ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            ValidIssuer = _jwt.Issuer,
+            ValidAudience = _jwt.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key)),
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -241,16 +243,16 @@ public class IdentityService : IIdentityService
 
         return result.ToApplicationResult();
     }
-    public string CreateToken(JwtDetail jwt, ClaimsIdentity claimsIdentity)
+    public string CreateToken(ClaimsIdentity claimsIdentity)
     {
         var tokenDescriptor = new SecurityTokenDescriptor
                             {
                                 Subject = claimsIdentity,
-                                Expires = _dateTime.Now.AddMinutes(jwt.TokenValidityInMinutes),
-                                Issuer = jwt.Issuer,
-                                Audience = jwt.Audience,
+                                Expires = _dateTime.Now.AddMinutes(_jwt.TokenValidityInMinutes),
+                                Issuer = _jwt.Issuer,
+                                Audience = _jwt.Audience,
                                 SigningCredentials = new SigningCredentials
-                                    (new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+                                    (new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key)),
                                     SecurityAlgorithms.HmacSha512Signature)
                             };
         var tokenHandler = new JwtSecurityTokenHandler();

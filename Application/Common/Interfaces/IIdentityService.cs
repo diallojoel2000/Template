@@ -12,6 +12,6 @@ public interface IIdentityService
     Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password);
 
     Task<Result> DeleteUserAsync(string userId);
-    Task<ResponseDto> LoginAsync(string username, string password, JwtDetail jwt);
-    Task<ResponseDto> RefreshToken(string username, string accessToken, JwtDetail jwt, CancellationToken cancellationToken);
+    Task<ResponseDto> LoginAsync(string username, string password);
+    Task<ResponseDto> RefreshToken(string username, string accessToken, CancellationToken cancellationToken);
 }

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Identity;
+﻿using Domain.Common;
+using Infrastructure.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,7 @@ public static class InitialiserExtensions
 
         public async Task TrySeedAsync()
         {
-            //await CreateApplicationClasses();
+            await CreateApplicationClasses();
             // Default roles
             var administratorRole = new IdentityRole("Administrator");
 
@@ -90,15 +91,31 @@ public static class InitialiserExtensions
 
         public async Task CreateApplicationClasses()
         {
+            var baseFolder = "\\GeneratedClasses";
+            if (!Directory.Exists(baseFolder))
+            {
+                Directory.CreateDirectory(baseFolder);
+            }
+            var appFolder = $"{baseFolder}/Application{DateTime.Now.ToString("yyyyMMddmmss")}";
+            Directory.CreateDirectory(appFolder);
+
             var entityTypes = _context.Model.GetEntityTypes();
             foreach (var entityType in entityTypes)
             {
                 var entity = entityType.ClrType;
+                if(entity.Name.StartsWith("Identity"))
+                {
+                    continue;
+                }
                 var properties = entityType.GetProperties();
-                CreateCRUD.CommandCreate(entity, properties);
+                
+                var entityFolder = $"{appFolder}/{entity.Name.Plural()}";
+                Directory.CreateDirectory(entityFolder);
+                var folderPath = Path.GetFullPath(entityFolder);
+
+                CreateCRUD.CommandCreate(entity, properties, entityFolder);
                 foreach (var item in entity.GetProperties())
                 {
-                    
                     var prop = item.Name;
                 }
             }

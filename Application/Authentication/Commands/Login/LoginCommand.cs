@@ -1,9 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Models;
 using Domain.Entities;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-using Application.Common.Exceptions;
 
 namespace Application.Authentication.Commands
 {
@@ -16,17 +13,13 @@ namespace Application.Authentication.Commands
     {
         private readonly IIdentityService _identityService;
         private IEncryptionService _encryptionService;
-        private JwtDetail _jwtDetail;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IDateTime _dateTime;
         private readonly IApplicationDbContext _context;
         private readonly IUser _currentUser;
-        public LoginCommandHandler(IApplicationDbContext context, IDateTime dateTime,IHttpContextAccessor httpContextAccessor,IIdentityService identityService,IOptions<JwtDetail> jwt, IEncryptionService encryptionService,IUser currentUser)
+        public LoginCommandHandler(IApplicationDbContext context, IDateTime dateTime,IIdentityService identityService, IEncryptionService encryptionService,IUser currentUser)
         {
             _identityService = identityService;
             _encryptionService = encryptionService;
-            _jwtDetail = jwt.Value;
-            _httpContextAccessor = httpContextAccessor;
             _dateTime = dateTime;
             _context = context;
             _currentUser = currentUser;
@@ -34,8 +27,8 @@ namespace Application.Authentication.Commands
 
         public async Task<ResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            var response = await _identityService.LoginAsync(request.Username, request.Password, _jwtDetail);
-            //var response = await _identityService.LoginAsync(_encryptionService.DecryptAes(request.Username), _encryptionService.DecryptAes(request.Password), _jwtDetail);
+            //var response = await _identityService.LoginAsync(request.Username, request.Password, _jwtDetail);
+            var response = await _identityService.LoginAsync(_encryptionService.DecryptAes(request.Username), _encryptionService.DecryptAes(request.Password));
             if(!response.IsSuccess)
             {
                 throw new Common.Exceptions.ValidationException(response.DisplayMessage);
