@@ -73,7 +73,7 @@ public static class InitialiserExtensions
             }
 
             // Default users
-            var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
+            var administrator = new ApplicationUser {FullName="John Doe", UserName = "admin@localhost", Email = "admin@localhost" };
 
             if (_userManager.Users.All(u => u.UserName != administrator.UserName))
             {

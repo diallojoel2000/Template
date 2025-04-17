@@ -5,6 +5,8 @@ namespace Infrastructure.Identity;
 public class ApplicationUser : IdentityUser
 {
     [MaxLength(150)]
+    public required string FullName { get; set; }
+    [MaxLength(150)]
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public DateTime? LastLogin { get; set; }

@@ -120,7 +120,8 @@ namespace Infrastructure.Persistence
             "Int32" => "int",
             "Int64" => "long",
             "String" => type.ToLower(),
-            _=>type
+            "Boolean" => "bool",
+            _ =>type
         };
         private static string GenerateRecord(Type entity, IEnumerable<IProperty> properties)
         {

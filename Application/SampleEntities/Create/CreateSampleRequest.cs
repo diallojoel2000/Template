@@ -25,6 +25,7 @@ internal class CreateSampleRequestHandler : IRequestHandler<CreateSampleRequest,
         };
         _context.SampleEntities.Add(sample);
         await _context.SaveChangesAsync(cancellationToken);
+       
         return sample.Id;
     }
 

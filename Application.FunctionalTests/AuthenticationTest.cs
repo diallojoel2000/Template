@@ -14,20 +14,18 @@ public class AuthenticationTest:Testing
     public async Task ShouldAuthenticateSucessfully()
     {
         await SeedDatabase();
-        var data = new LoginCommand
+        var request = new ApiRequest
         {
-            Username = _encryptionService.EncryptAes("administrator@localhost"),
-            Password = _encryptionService.EncryptAes("Administrator1!")
+            Data = new LoginCommand
+            {
+                Username = _encryptionService.EncryptAes("admin@localhost"),
+                Password = _encryptionService.EncryptAes("Administrator1!")
+            },
+            Url = "Authenticate/Login",
+            ApiType = Common.Models.Enums.ApiType.POST
         };
-
-        var message = new HttpRequestMessage();
-        message.Headers.Add("Accept", "application/json");
-        message.RequestUri = new Uri($"{_client.BaseAddress}Authentication/Login");
-        message.Content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-        message.Method = HttpMethod.Post;
-
-        var response = await _client.SendAsync(message);
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var response = await new HttpServices(_client).SendAsync(request);
 
         var json = await response.Content.ReadAsStringAsync();
         var apiResponse = JsonConvert.DeserializeObject<ResponseDto>(json);

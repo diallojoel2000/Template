@@ -1,6 +1,7 @@
 ﻿using Application.Authentication.Commands;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Common.Models.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -64,25 +65,21 @@ namespace Application.FunctionalTests.Setup
         
         public static async Task<string> GetToken()
         {
-            var data = new LoginCommand
+            var request = new ApiRequest
             {
-                Username = _encryptionService.EncryptAes("administrator@localhost"),
-                Password = _encryptionService.EncryptAes("Administrator1!")
+                ApiType = ApiType.POST,
+                Data = new LoginCommand
+                {
+                    Username = _encryptionService.EncryptAes("admin@localhost"),
+                    Password = _encryptionService.EncryptAes("Administrator1!")
+                },
+                Url = $"{_client.BaseAddress}Authentication/Login"
             };
-
-            var message = new HttpRequestMessage();
-            message.Headers.Add("Accept", "application/json");
-            message.RequestUri = new Uri($"{_client.BaseAddress}Authentication/Login");
-            message.Content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-            message.Method = HttpMethod.Post;
-
-            var response = await _client.SendAsync(message);
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var apiResponse = JsonConvert.DeserializeObject<ResponseDto>(json);
-           
-            TokenVm tokenVm = JsonConvert.DeserializeObject<TokenVm>(apiResponse.Result.ToString());
-            return tokenVm.Token;
+            var response = await new HttpServices(_client).SendAsync(request);
+            var jsonString = await response.Content.ReadAsStringAsync();
+            var responseDto = JsonConvert.DeserializeObject<ResponseDto>(jsonString);
+            var tokenVm = JsonConvert.DeserializeObject<TokenVm>(responseDto!.Result.ToString());
+            return tokenVm!.Token;
         }
         public static async Task SeedDatabase()
         {

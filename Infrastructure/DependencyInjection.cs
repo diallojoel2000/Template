@@ -56,10 +56,14 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddApiEndpoints();
 
+        services.AddHttpClient<IHttpRequestService, HttpRequestService>();
         services.AddSingleton(TimeProvider.System);
+        services.AddTransient<IDateTime, DateTimeService>();
         services.AddTransient<IIdentityService, IdentityService>();
         services.AddTransient<IEncryptionService, EncryptionService>();
-        services.AddTransient<IDateTime, DateTimeService>();
+        
+        services.AddTransient<IHttpRequestService, HttpRequestService>();
+
         services.AddAuthorization(options =>
              options.AddPolicy("CanPurge", policy => policy.RequireRole("Administrator")));
 

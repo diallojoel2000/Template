@@ -1,11 +1,8 @@
 using Application.Common.Exceptions;
-using Application.Common.Interfaces;
 using Application.FunctionalTests.Setup;
 using Application.SampleEntities.Create;
 using FluentAssertions;
-using Moq;
 using Newtonsoft.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net;
 using System.Text;
 
