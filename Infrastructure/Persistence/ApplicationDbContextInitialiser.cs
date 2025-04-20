@@ -65,11 +65,16 @@ public static class InitialiserExtensions
         {
             //await CreateApplicationClasses();
             // Default roles
-            var administratorRole = new IdentityRole("Administrator");
+            var manageUserRole = new IdentityRole("ManageUsers");
+            var manageRole = new IdentityRole("ManageRoles");
 
-            if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
+            if (_roleManager.Roles.All(r => r.Name != manageUserRole.Name))
             {
-                await _roleManager.CreateAsync(administratorRole);
+                await _roleManager.CreateAsync(manageUserRole);
+            }
+            if (_roleManager.Roles.All(r => r.Name != manageRole.Name))
+            {
+                await _roleManager.CreateAsync(manageRole);
             }
 
             // Default users
@@ -78,9 +83,9 @@ public static class InitialiserExtensions
             if (_userManager.Users.All(u => u.UserName != administrator.UserName))
             {
                 await _userManager.CreateAsync(administrator, "Administrator1!");
-                if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+                if (!string.IsNullOrWhiteSpace(manageUserRole.Name))
                 {
-                    await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                    await _userManager.AddToRolesAsync(administrator, new[] { manageUserRole.Name, manageRole.Name });
                 }
             }
 

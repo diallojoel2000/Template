@@ -1,8 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Mappings;
 using Application.Common.Models;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using LinqKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +15,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using NanoidDotNet;
 
 namespace Infrastructure.Identity;
 
@@ -180,18 +179,65 @@ public class IdentityService : IIdentityService
         return response;
     }
     
-    public async Task<(Result Result, string UserId)> CreateUserAsync(string fullName, string userName, string password)
+    public async Task<(Result Result, string UserId)> CreateUserAsync(string fullName, string userName,string email, string password)
     {
         var user = new ApplicationUser
         {
             UserName = userName,
-            Email = userName,
+            Email = email,
             FullName = fullName,
         };
 
         var result = await _userManager.CreateAsync(user, password);
 
         return (result.ToApplicationResult(), user.Id);
+    }
+    public async Task<ResponseDto> AdminResetPassword(string id)
+    {
+        var response = new ResponseDto();
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            response.IsSuccess = false;
+            response.DisplayMessage ="User does not exist";
+            return response;
+        }
+
+        var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+        
+        var password = Nanoid.Generate(size: 8);
+        var result = await _userManager.ResetPasswordAsync(user, code, password);
+        if (result.Succeeded)
+        {
+            response.DisplayMessage = $"Password has been reset to {password}";
+            return response;
+        }
+        response.IsSuccess = false;
+        response.DisplayMessage = result!.Errors!.FirstOrDefault()!.Description;
+        return response;
+    }
+    public async Task<ResponseDto> LockAccount(string id)
+    {
+        var response = new ResponseDto();
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            response.IsSuccess = false;
+            response.DisplayMessage = "User does not exist";
+            return response;
+        }
+
+        user.LockoutEnd = _dateTime.Now.AddYears(100);
+        user.LockoutEnabled = true;
+        var result = await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            response.DisplayMessage = $"User is now disabled";
+            return response;
+        }
+        response.IsSuccess = false;
+        response.DisplayMessage = result!.Errors!.FirstOrDefault()!.Description;
+        return response;
     }
 
     public async Task<bool> IsInRoleAsync(string userId, string role)

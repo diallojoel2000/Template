@@ -21,7 +21,7 @@ public class AuthenticationTest:Testing
                 Username = _encryptionService.EncryptAes("admin@localhost"),
                 Password = _encryptionService.EncryptAes("Administrator1!")
             },
-            Url = "Authenticate/Login",
+            Url = $"{_client.BaseAddress}Authentication/Login",
             ApiType = Common.Models.Enums.ApiType.POST
         };
         

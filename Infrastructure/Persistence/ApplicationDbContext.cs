@@ -10,11 +10,13 @@ namespace Infrastructure.Persistence;
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>,  IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
+    
     public DbSet<SampleEntity> SampleEntities => Set<SampleEntity>();
+    public DbSet<AppRole> AppRoles => Set<AppRole>();
+    public DbSet<AppRolePermission> AppRolePermissions => Set<AppRolePermission>();
     public DbSet<LoginLog> LoginLogs => Set<LoginLog>();
 
-    //public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+    
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -1,3 +1,4 @@
+using Application.Common.Mappings;
 using Infrastructure.Persistence;
 using Serilog;
 using Serilog.Enrichers.Sensitive;
@@ -33,8 +34,9 @@ try
     // Add services to the container.
     builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
 
-    builder.Services.AddApplicationServices();
+    //The arrangement is very important or you gonna learn
     builder.Services.AddInfrastructureServices(builder.Configuration);
+    builder.Services.AddApplicationServices();
     builder.Services.AddWebServices();
     builder.Services.BindOptions(builder.Configuration);
     builder.Services.OptionsPostConfiguration();

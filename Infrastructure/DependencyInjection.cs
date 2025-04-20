@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IDateTime, DateTimeService>();
         services.AddTransient<IIdentityService, IdentityService>();
+        services.AddTransient<IIdentityRoleServices, IdentityRoleServices>();
         services.AddTransient<IEncryptionService, EncryptionService>();
         
         services.AddTransient<IHttpRequestService, HttpRequestService>();
