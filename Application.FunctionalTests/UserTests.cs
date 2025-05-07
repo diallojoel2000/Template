@@ -2,7 +2,6 @@
 using FluentAssertions;
 using Application.Common.Models;
 using Application.Users;
-using Application.Common.Models.Enums;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -22,7 +21,7 @@ public class UserTests:Testing
             Url = $"{_client.BaseAddress}Users",
             Data = query,
             AccessToken = token,
-            ApiType=ApiType.GET
+            Method=HttpMethod.Get
         };
 
         var response = await new HttpServices(_client).SendAsync(request);
@@ -51,7 +50,7 @@ public class UserTests:Testing
             Url = $"{_client.BaseAddress}Users",
             Data = query,
             AccessToken = token,
-            ApiType = ApiType.GET
+            Method = HttpMethod.Get
         };
 
         var response = await new HttpServices(_client).SendAsync(request);

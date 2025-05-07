@@ -2,7 +2,6 @@
 using System.Text.Encodings.Web;
 using Application.Common.Interfaces;
 using Application.Common.Models;
-using Application.Common.Models.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -30,6 +29,7 @@ public class HttpRequestService: IHttpRequestService
     public async Task<T> SendAsync<T>(ApiRequest apiRequest)
     {
         var client = _httpClient.CreateClient("Infrastructure"); //Does not bypass certificate validation
+
             var message = new HttpRequestMessage();
             message.Headers.Add("Accept", "application/json");
             message.RequestUri = new Uri(apiRequest.Url);
@@ -46,24 +46,9 @@ public class HttpRequestService: IHttpRequestService
             {
                 client.DefaultRequestHeaders.Add(header.Key, header.Value);
             }
-            switch (apiRequest.ApiType)
-            {
-                case ApiType.POST:
-                    message.Method = HttpMethod.Post;
-                    break;
-                case ApiType.GET:
-                    message.Method = HttpMethod.Get;
-                    break;
-                case ApiType.PUT:
-                    message.Method = HttpMethod.Put;
-                    break;
-                case ApiType.DELETE:
-                    message.Method = HttpMethod.Delete;
-                    break;
-                default:
-                    message.Method = HttpMethod.Get;
-                    break;
-            }
+
+            message.Method = apiRequest.Method;
+            
             _logger.LogInformation("Api Request: {@apiRequest}", apiRequest);
             var response = await client.SendAsync(message);
             if (response.IsSuccessStatusCode)

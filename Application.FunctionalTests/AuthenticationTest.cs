@@ -22,7 +22,7 @@ public class AuthenticationTest:Testing
                 Password = _encryptionService.EncryptAes("Administrator1!")
             },
             Url = $"{_client.BaseAddress}Authentication/Login",
-            ApiType = Common.Models.Enums.ApiType.POST
+            Method = HttpMethod.Post
         };
         
         var response = await new HttpServices(_client).SendAsync(request);

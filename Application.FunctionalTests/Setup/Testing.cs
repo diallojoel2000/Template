@@ -1,11 +1,9 @@
 ﻿using Application.Authentication.Commands;
 using Application.Common.Interfaces;
 using Application.Common.Models;
-using Application.Common.Models.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System.Text;
 using static Infrastructure.Persistence.InitialiserExtensions;
 
 namespace Application.FunctionalTests.Setup
@@ -67,7 +65,7 @@ namespace Application.FunctionalTests.Setup
         {
             var request = new ApiRequest
             {
-                ApiType = ApiType.POST,
+                Method = HttpMethod.Post,
                 Data = new LoginCommand
                 {
                     Username = _encryptionService.EncryptAes("admin@localhost"),
