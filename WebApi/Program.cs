@@ -1,5 +1,6 @@
 using Application.Common.Mappings;
 using Infrastructure.Persistence;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Enrichers.Sensitive;
 
@@ -67,14 +68,16 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-    else
-    {
-        app.UseHsts();
-    }
+        
     await app.InitialiseDatabaseAsync();
 
     app.UseCors("AllowAll");
     app.UseHealthChecks("/health");
+    app.UseHsts();
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders =  ForwardedHeaders.XForwardedProto
+    });
     app.UseHttpsRedirection();
     app.UseStaticFiles();
     app.UseAuthentication();

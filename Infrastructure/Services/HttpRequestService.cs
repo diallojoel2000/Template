@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Services;
-public class HttpRequestService: IHttpRequestService
+public class HttpRequestService : IHttpRequestService
 {
     public IHttpClientFactory _httpClient { get; set; }
     private readonly ILogger<HttpRequestService> _logger;
@@ -28,44 +28,44 @@ public class HttpRequestService: IHttpRequestService
 
     public async Task<T> SendAsync<T>(ApiRequest apiRequest)
     {
-        var client = _httpClient.CreateClient("Infrastructure"); //Does not bypass certificate validation
+        var client = _httpClient.CreateClient();
 
-            var message = new HttpRequestMessage();
-            message.Headers.Add("Accept", "application/json");
-            message.RequestUri = new Uri(apiRequest.Url);
-            client.DefaultRequestHeaders.Clear();
-            if (apiRequest.Data != null)
-            {
-                message.Content = new StringContent(JsonConvert.SerializeObject(apiRequest.Data), Encoding.UTF8, "application/json");
-            }
-            if (!string.IsNullOrEmpty(apiRequest.AccessToken))
-            {
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiRequest.AccessToken);
-            }
-            foreach (var header in apiRequest.Headers)
-            {
-                client.DefaultRequestHeaders.Add(header.Key, header.Value);
-            }
+        var message = new HttpRequestMessage();
+        message.Headers.Add("Accept", "application/json");
+        message.RequestUri = new Uri(apiRequest.Url);
 
-            message.Method = apiRequest.Method;
-            
-            _logger.LogInformation("Api Request: {@apiRequest}", apiRequest);
-            var response = await client.SendAsync(message);
-            if (response.IsSuccessStatusCode)
+        if (apiRequest.Data != null)
+        {
+            message.Content = new StringContent(JsonConvert.SerializeObject(apiRequest.Data), Encoding.UTF8, "application/json");
+        }
+        if (!string.IsNullOrEmpty(apiRequest.AccessToken))
+        {
+            message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiRequest.AccessToken);
+        }
+        foreach (var header in apiRequest.Headers)
+        {
+            message.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+
+        message.Method = apiRequest.Method;
+
+        _logger.LogInformation("Api Request: {@apiRequest}", apiRequest);
+        var response = await client.SendAsync(message);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+
+            if (_configuration.GetValue<bool>("LogApiResponse"))
             {
-                var json = await response.Content.ReadAsStringAsync();
-                
-                if (_configuration.GetValue<bool>("LogApiResponse"))
-                {
-                    _logger.LogInformation("Api Response: {@apiResponse}",_htmlEncoder.Encode(json) );
-                }
-                var apiResponseDto = JsonConvert.DeserializeObject<T>(json);
-                return apiResponseDto;
+                _logger.LogInformation("Api Response: {@apiResponse}", _htmlEncoder.Encode(json));
             }
-            else
-            {
-                _logger.LogInformation("Api Error: {@apiError}", response);
-                throw new Exception(response?.ReasonPhrase);
-            }
+            var apiResponseDto = JsonConvert.DeserializeObject<T>(json);
+            return apiResponseDto;
+        }
+        else
+        {
+            _logger.LogError("Api Error: {@apiError}", response);
+            throw new Exception(response?.ReasonPhrase);
+        }
     }
 }
