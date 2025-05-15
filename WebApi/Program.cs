@@ -68,16 +68,20 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-        
+    else
+    {
+        app.UseHsts();
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedProto
+        });
+    }
+
     await app.InitialiseDatabaseAsync();
 
     app.UseCors("AllowAll");
     app.UseHealthChecks("/health");
-    app.UseHsts();
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
-    {
-        ForwardedHeaders =  ForwardedHeaders.XForwardedProto
-    });
+    
     app.UseHttpsRedirection();
     app.UseStaticFiles();
     app.UseAuthentication();
