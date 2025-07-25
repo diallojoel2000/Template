@@ -7,9 +7,9 @@ public class RolesController : ApiControllerBase
 {
     [HttpGet]
     [Route("GetRoleMatrix")]
-    public async Task<RoleMatrix> GetRoleMatrix()
+    public async Task<ActionResult<RoleMatrix>> GetRoleMatrix()
     {
         var response = await Mediator.Send(new GetRoleMatrixQuery());
-        return response;
+        return Ok(response);
     }
 }

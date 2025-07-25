@@ -16,6 +16,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using NanoidDotNet;
+using Application.Common.Exceptions;
 
 namespace Infrastructure.Identity;
 
@@ -198,23 +199,22 @@ public class IdentityService : IIdentityService
         var user = await _userManager.FindByIdAsync(id);
         if (user == null)
         {
-            response.IsSuccess = false;
-            response.DisplayMessage ="User does not exist";
-            return response;
+            throw new ValidationException("User does not exist");
         }
 
         var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-        
-        var password = Nanoid.Generate(size: 8);
+
+        var rnd = new Random();
+        var password = $"{Nanoid.Generate(size: 8)}{rnd.Next(1,9)}%";
         var result = await _userManager.ResetPasswordAsync(user, code, password);
         if (result.Succeeded)
         {
             response.DisplayMessage = $"Password has been reset to {password}";
             return response;
         }
-        response.IsSuccess = false;
-        response.DisplayMessage = result!.Errors!.FirstOrDefault()!.Description;
-        return response;
+       
+        throw new ValidationException(result!.Errors!.FirstOrDefault()!.Description);
+        
     }
     public async Task<ResponseDto> LockAccount(string id)
     {

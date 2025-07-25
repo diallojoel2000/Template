@@ -16,10 +16,10 @@ public class UserTests:Testing
 
         var token = await GetToken();
 
+        var search = string.IsNullOrEmpty(query.Search) ? "" : $"&search={query.Search}";
         var request = new ApiRequest
         {
-            Url = $"{_client.BaseAddress}Users",
-            Data = query,
+            Url = $"{_client.BaseAddress}Users?pageNumber={query.PageNumber}&pageSize={query.PageSize}{search}",
             AccessToken = token,
             Method=HttpMethod.Get
         };

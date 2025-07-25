@@ -89,8 +89,9 @@ try
     app.UseCookiePolicy();
 
     app.MapControllers();
-
+    Log.Information("Application has started");
     app.Run();
+    
 }
 catch(Exception ex)
 {
